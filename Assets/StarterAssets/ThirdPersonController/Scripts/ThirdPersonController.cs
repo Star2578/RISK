@@ -373,7 +373,7 @@ namespace StarterAssets
                 float t = Mathf.Clamp01(_rollDistanceFraction / _rollDuration);
 
                 // total distance we should have reached by now
-                float targetDist = rollCurve.Evaluate(t) * _rollDistanceFraction;
+                float targetDist = rollCurve.Evaluate(t) * RollDistance;
 
                 // move only the "remaining" piece for this frame
                 float remainingDist = targetDist - _distRolled;
