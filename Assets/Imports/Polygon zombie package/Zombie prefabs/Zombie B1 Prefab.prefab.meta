@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 7f89a1dce2bcc544c8d39447d69982d5
+timeCreated: 1519777148
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 100100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 81953
+  packageName: POLYGON - Zombie Pack
+  packageVersion: 1.0.0
+  assetPath: Assets/Polygon zombie package/Zombie prefabs/Zombie B1 Prefab.prefab
+  uploadId: 659046

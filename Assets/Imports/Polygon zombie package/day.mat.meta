@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 5dd8eb9c85770c242b95f81c03d21020
+timeCreated: 1520696726
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 81953
+  packageName: POLYGON - Zombie Pack
+  packageVersion: 1.0.0
+  assetPath: Assets/Polygon zombie package/day.mat
+  uploadId: 659046

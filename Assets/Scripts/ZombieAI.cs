@@ -7,6 +7,7 @@ public class ZombieAI : MonoBehaviour
     private State currentState;
 
     public NavMeshAgent agent;
+    public Animator animator;
     public Transform player;
 
     [Header("Zombie Settings")]
@@ -39,7 +40,7 @@ public class ZombieAI : MonoBehaviour
         if (player == null)
             player = GameObject.FindGameObjectWithTag("Player").transform;
         agent.speed = roamSpeed;
-        agent.SetDestination(villageCenter.position);
+        PickNewRoamPoint();
     }
 
     void Update()
@@ -80,11 +81,26 @@ public class ZombieAI : MonoBehaviour
     void GoToVillage()
     {
         agent.speed = roamSpeed;
-        if (!agent.pathPending && agent.remainingDistance < 0.5f)
+
+        if (heardSound)
         {
-            agent.SetDestination(villageCenter.position);
+            agent.SetDestination(lastHeardSound);
+            if (!agent.pathPending && agent.remainingDistance < 0.5f)
+            {
+                heardSound = false; // reached sound
+                PickNewRoamPoint(); // resume going inside after checking
+            }
         }
+        else if (!agent.pathPending && agent.remainingDistance < 0.5f)
+        {
+            PickNewRoamPoint(); // go to random point inside the village instead of center
+        }
+
+        if (CanSeePlayer())
+            SwitchState(State.Chasing);
     }
+
+
 
     bool IsInVillage()
     {
@@ -107,13 +123,16 @@ public class ZombieAI : MonoBehaviour
             {
                 heardSound = false; // reached sound source
             }
-            Debug.Log("Zombie heard a sound and is investigating.");
         }
         else if (!agent.pathPending && agent.remainingDistance < 0.5f)
         {
             PickNewRoamPoint();
         }
+
+        if (CanSeePlayer())
+            SwitchState(State.Chasing);
     }
+
 
     void PickNewRoamPoint()
     {
@@ -133,12 +152,17 @@ public class ZombieAI : MonoBehaviour
         {
             roamDestination = hit.position;
             agent.SetDestination(roamDestination);
+            animator.SetBool("IsRunning", false);
+            animator.SetBool("IsWalking", true);
         }
     }
 
     void ChasePlayer(float distance)
     {
+        Debug.Log("Zombie spotted the player and is chasing!");
         agent.speed = chaseSpeed;
+        animator.SetBool("IsRunning", true);
+        animator.SetBool("IsWalking", false);
         agent.SetDestination(player.position);
 
         if (distance <= attackRange)
@@ -156,6 +180,7 @@ public class ZombieAI : MonoBehaviour
             Debug.Log("Zombie attacks player!");
             // TODO: Damage player
             lastAttackTime = Time.time;
+            animator.SetTrigger("Attack");
         }
 
         if (distance > attackRange)
