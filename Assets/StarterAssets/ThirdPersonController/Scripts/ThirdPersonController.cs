@@ -1,4 +1,4 @@
-﻿ using UnityEngine;
+﻿using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
 #endif
@@ -20,6 +20,13 @@ namespace StarterAssets
 
         [Tooltip("Sprint speed of the character in m/s")]
         public float SprintSpeed = 5.335f;
+
+        [Tooltip("Roll distance of the character in m")]
+        public float RollDistance = 2f;
+
+        [Tooltip("Roll Movement Curve")]
+        public AnimationCurve rollCurve =            // 0..1 -> fraction of distance
+        AnimationCurve.EaseInOut(0, 0, 1, 1);
 
         [Tooltip("How fast the character turns to face movement direction")]
         [Range(0.0f, 0.3f)]
@@ -81,6 +88,9 @@ namespace StarterAssets
 
         // player
         private float _speed;
+        private float _rollDistanceFraction; // how much the roll progressed
+        private float _rollDuration = 1.16f;
+        private float _distRolled;
         private float _animationBlend;
         private float _targetRotation = 0.0f;
         private float _rotationVelocity;
@@ -97,6 +107,7 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
+        private int _animIDRollForward;
 
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
@@ -135,7 +146,7 @@ namespace StarterAssets
         private void Start()
         {
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-            
+
             _hasAnimator = TryGetComponent(out _animator);
             _controller = GetComponent<CharacterController>();
             _input = GetComponent<StarterAssetsInputs>();
@@ -159,6 +170,7 @@ namespace StarterAssets
             JumpAndGravity();
             GroundedCheck();
             Move();
+            Roll();
         }
 
         private void LateUpdate()
@@ -173,6 +185,7 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDRollForward = Animator.StringToHash("Roll");
         }
 
         private void GroundedCheck()
@@ -348,6 +361,58 @@ namespace StarterAssets
             }
         }
 
+        private void Roll()
+        {
+            bool isRolling = _animator.GetBool(_animIDRollForward);
+
+            if (isRolling)
+            {
+                _input.roll = false;
+
+                _rollDistanceFraction += Time.deltaTime;
+                float t = Mathf.Clamp01(_rollDistanceFraction / _rollDuration);
+
+                // total distance we should have reached by now
+                float targetDist = rollCurve.Evaluate(t) * _rollDistanceFraction;
+
+                // move only the "remaining" piece for this frame
+                float remainingDist = targetDist - _distRolled;
+                _distRolled = targetDist;
+
+                Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
+                _controller.Move(remainingDist * targetDirection);
+
+                //end of animation
+                if (t >= 1f && _hasAnimator)
+                {
+                    _animator.SetBool(_animIDRollForward, false);
+
+                }
+            }
+
+
+
+
+            if (_input.roll && !isRolling)
+            {
+                if (_hasAnimator)
+                {
+                    _animator.SetBool(_animIDRollForward, true);
+                }
+
+                _rollDistanceFraction = 0f;
+                _distRolled = 0f;
+                // AnimatorStateInfo next = _animator.GetCurrentAnimatorStateInfo(0);
+                // if (next.fullPathHash == _animIDRollForward || next.IsTag("Roll"))
+                // {
+                // state.length already accounts for animation speed
+                // _rollDuration = next.length;
+                // }
+            }
+
+
+
+        }
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
             if (lfAngle < -360f) lfAngle += 360f;
