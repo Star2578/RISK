@@ -7775,8 +7775,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MoveSpeed: 2
-  SprintSpeed: 5.335
-  RollDistance: 2
+  SprintSpeed: 5.33
+  RollDistance: 1
   rollCurve:
     serializedVersion: 2
     m_Curve:

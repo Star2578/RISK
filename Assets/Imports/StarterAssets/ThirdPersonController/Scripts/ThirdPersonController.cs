@@ -89,6 +89,7 @@ namespace StarterAssets
         // player
         private float _speed;
         private float _rollDistanceFraction; // how much the roll progressed
+        private float _rollTotalDistance;
         private float _rollDuration = 1.16f;
         private float _distRolled;
         private float _animationBlend;
@@ -373,7 +374,7 @@ namespace StarterAssets
                 float t = Mathf.Clamp01(_rollDistanceFraction / _rollDuration);
 
                 // total distance we should have reached by now
-                float targetDist = rollCurve.Evaluate(t) * RollDistance;
+                float targetDist = rollCurve.Evaluate(t) * _rollTotalDistance;
 
                 // move only the "remaining" piece for this frame
                 float remainingDist = targetDist - _distRolled;
@@ -402,6 +403,7 @@ namespace StarterAssets
 
                 _rollDistanceFraction = 0f;
                 _distRolled = 0f;
+                _rollTotalDistance = RollDistance + (_input.sprint ? SprintSpeed : MoveSpeed) / 2;
                 // AnimatorStateInfo next = _animator.GetCurrentAnimatorStateInfo(0);
                 // if (next.fullPathHash == _animIDRollForward || next.IsTag("Roll"))
                 // {
