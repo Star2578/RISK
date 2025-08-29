@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 #endif
 
 /* Note: animations are called via the controller for both the character and capsule using animator null checks
@@ -15,6 +18,8 @@ namespace StarterAssets
     public class ThirdPersonController : MonoBehaviour
     {
         [Header("Player")]
+        [SerializeField] private float _aimShrinkSpeed = 0.5f; // how fast it shrinks per second
+        [SerializeField] private float _minCrosshairScale = 0.5f; // smallest allowed crosshair size
         [Tooltip("Move speed of the character in m/s")]
         public float MoveSpeed = 2.0f;
 
@@ -82,6 +87,14 @@ namespace StarterAssets
         [Tooltip("For locking the camera position on all axis")]
         public bool LockCameraPosition = false;
 
+        [Header("Gun")]
+        public List<Texture2D> ammoTextures;
+        public RawImage ammoDisplay;
+        public RawImage crosshair;
+        [SerializeField] private TrailRenderer tracerPrefab;
+        [SerializeField] private Transform muzzlePoint;
+        [SerializeField] private float tracerDuration = 0.05f;
+
         // cinemachine
         private float _cinemachineTargetYaw;
         private float _cinemachineTargetPitch;
@@ -97,10 +110,16 @@ namespace StarterAssets
         private float _rotationVelocity;
         private float _verticalVelocity;
         private float _terminalVelocity = 53.0f;
+        private float _aimTimer = 0f;
+        private float _crosshairScale = 1.25f;  // starting size
+        private float _fireDelay = 0.5f; // time between shots
+        private int maxAmmo = 6;
+        private int currentAmmo;
 
         // timeout deltatime
         private float _jumpTimeoutDelta;
         private float _fallTimeoutDelta;
+        private float _lastFireTime = 0f;
 
         // animation IDs
         private int _animIDSpeed;
@@ -159,6 +178,8 @@ namespace StarterAssets
 
             AssignAnimationIDs();
 
+            currentAmmo = maxAmmo;
+            ammoDisplay.texture = ammoTextures[currentAmmo];
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
@@ -172,6 +193,8 @@ namespace StarterAssets
             GroundedCheck();
             Move();
             Roll();
+            Reload();
+            Aim();
         }
 
         private void LateUpdate()
@@ -274,9 +297,13 @@ namespace StarterAssets
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
                     RotationSmoothTime);
 
-                // rotate to face input direction relative to camera position
-                transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                if (!_input.aim)
+                    // rotate to face input direction relative to camera position
+                    transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
+
+            if (_input.aim)
+                targetSpeed *= 0.5f;
 
 
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
@@ -411,10 +438,110 @@ namespace StarterAssets
                 // _rollDuration = next.length;
                 // }
             }
-
-
-
         }
+
+        private void Reload()
+        {
+            if (_input.reload && !_animator.GetBool(_animIDRollForward)) // can't reload while rolling
+            {
+                _input.reload = false;
+                if (currentAmmo < maxAmmo)
+                {
+                    // TODO : play reload animation
+                    currentAmmo = maxAmmo;
+                    ammoDisplay.texture = ammoTextures[currentAmmo];
+                }
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        private void Aim()
+        {
+            crosshair.enabled = _input.aim;
+            _lastFireTime += Time.deltaTime;
+
+            if (_input.aim)
+            {
+                _animator.SetBool("Aim", true);
+                // Rotate player to face camera direction
+                Vector3 forward = _mainCamera.transform.forward;
+                forward.y = 0; // keep flat on ground
+                transform.forward = Vector3.Lerp(transform.forward, forward, Time.deltaTime * 10f);
+                
+                // Count aim duration
+                _aimTimer += Time.deltaTime;
+
+                // Shrink crosshair gradually
+                _crosshairScale = Mathf.Lerp(_crosshairScale, _minCrosshairScale, Time.deltaTime * _aimShrinkSpeed);
+                crosshair.rectTransform.localScale = Vector3.one * _crosshairScale;
+
+                // Handle firing
+                if (_input.fire && currentAmmo > 0 && _lastFireTime >= _fireDelay)
+                {
+                    _lastFireTime = 0f;
+                    Fire();
+                    ResetCrosshair(); // reset after shot
+                }
+            }
+            else
+            {
+                _animator.SetBool("Aim", false);
+                ResetCrosshair(); // if cancel aim
+            }
+        }
+
+        private void ResetCrosshair()
+        {
+            _aimTimer = 0f;
+            _crosshairScale = 1.25f;
+            crosshair.rectTransform.localScale = Vector3.one * _crosshairScale;
+        }
+
+        private void Fire()
+        {
+            currentAmmo--;
+            ammoDisplay.texture = ammoTextures[currentAmmo];
+
+            float inaccuracy = _crosshairScale; // bigger = worse accuracy
+            Vector3 shootDir = _mainCamera.transform.forward;
+            shootDir.x += Random.Range(-inaccuracy, inaccuracy) * 0.01f;
+            shootDir.y += Random.Range(-inaccuracy, inaccuracy) * 0.01f;
+            shootDir.z += Random.Range(-inaccuracy, inaccuracy) * 0.01f;
+
+            TrailRenderer tracer = Instantiate(tracerPrefab, muzzlePoint.position, Quaternion.identity);
+
+            if (Physics.Raycast(_mainCamera.transform.position, shootDir, out RaycastHit hit, 100f))
+            {
+                StartCoroutine(TracerEffect(tracer, hit.point));
+                Debug.Log("Hit: " + hit.collider.name);
+                // TODO: deal damage to hit target
+            }
+            else
+            {
+                Vector3 endPoint = _mainCamera.transform.position + shootDir * 100f;
+                StartCoroutine(TracerEffect(tracer, endPoint));
+            }
+
+            if (currentAmmo <= 0) Reload();
+        }
+
+        private IEnumerator TracerEffect(TrailRenderer tracer, Vector3 hitPoint)
+        {
+            float time = 0;
+            Vector3 startPos = tracer.transform.position;
+            while (time < tracerDuration)
+            {
+                tracer.transform.position = Vector3.Lerp(startPos, hitPoint, time / tracerDuration);
+                time += Time.deltaTime;
+                yield return null;
+            }
+            tracer.transform.position = hitPoint;
+            Destroy(tracer.gameObject, tracerDuration);
+        }
+
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
             if (lfAngle < -360f) lfAngle += 360f;

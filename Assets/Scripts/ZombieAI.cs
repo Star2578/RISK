@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-public class ZombieAI : MonoBehaviour
+public class ZombieAI : EntityBase
 {
     public enum State { GoingToVillage, Roaming, Chasing, Attacking }
     private State currentState;
@@ -264,5 +264,11 @@ public class ZombieAI : MonoBehaviour
         Vector3 rightBoundary = Quaternion.Euler(0, visionAngle, 0) * transform.forward;
         Gizmos.DrawRay(transform.position, leftBoundary * visionRange);
         Gizmos.DrawRay(transform.position, rightBoundary * visionRange);
+    }
+
+    protected override void Die()
+    {
+        animator.SetTrigger("Death");
+        agent.isStopped = true;
     }
 }

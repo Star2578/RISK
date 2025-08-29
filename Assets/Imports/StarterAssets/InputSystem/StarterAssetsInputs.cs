@@ -13,6 +13,9 @@ namespace StarterAssets
 		public bool jump;
 		public bool sprint;
 		public bool roll;
+		public bool aim;
+		public bool fire;
+		public bool reload;
 
 		[Header("Movement Settings")]
 		public bool analogMovement;
@@ -49,6 +52,21 @@ namespace StarterAssets
 		{
 			RollInput(value.isPressed);
 		}
+
+		public void OnAim(InputValue value)
+		{
+			AimInput(value.isPressed);
+		}
+
+		public void OnFire(InputValue value)
+		{
+			FireInput(value.isPressed);
+		}
+
+		public void OnReload(InputValue value)
+		{
+			ReloadInput(value.isPressed);
+		}
 #endif
 
 
@@ -71,9 +89,25 @@ namespace StarterAssets
 		{
 			sprint = newSprintState;
 		}
+
 		public void RollInput(bool newRollState)
 		{
 			roll = newRollState;
+		}
+
+		public void AimInput(bool newAimState)
+		{
+			aim = newAimState;
+		}
+
+		public void FireInput(bool newFireState)
+		{
+			fire = newFireState;
+		}
+
+		public void ReloadInput(bool newReloadState)
+		{
+			reload = newReloadState;
 		}
 
 		private void OnApplicationFocus(bool hasFocus)

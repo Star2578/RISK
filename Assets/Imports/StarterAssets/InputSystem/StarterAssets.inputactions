@@ -49,6 +49,33 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Aim",
+                    "type": "PassThrough",
+                    "id": "aaf3c27d-1aa8-41d3-80f0-22db89f12fdb",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Fire",
+                    "type": "Value",
+                    "id": "24bcc190-dcdf-449a-ac5b-ce22af272e25",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Reload",
+                    "type": "Button",
+                    "id": "950627a7-786c-4735-a7cf-fc03df2d8ce5",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -230,12 +257,56 @@
                 },
                 {
                     "name": "",
+                    "id": "26bbbfcb-2629-4f63-91ba-ff01d2d8d827",
+                    "path": "",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "7c70b2f6-99fb-4014-a6bb-7bf3da8211b4",
                     "path": "<Keyboard>/c",
                     "interactions": "",
                     "processors": "",
                     "groups": ";KeyboardMouse",
                     "action": "Roll",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4f918ae8-5cda-46e4-a7e7-6a7651fb0d3e",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardMouse",
+                    "action": "Fire",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "21e4d905-be19-4a2c-8d52-fa8bcbd392bd",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardMouse",
+                    "action": "Reload",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9d191784-3914-4b62-baa2-4e64d29adfa4",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardMouse",
+                    "action": "Aim",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
